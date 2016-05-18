@@ -97,15 +97,18 @@ void initSampleInterrupt(void) {
   TCCR0A = (1 << WGM00) | (1 << WGM01);
   TCCR0B = (1 << CS01) | (1 << WGM02);
   // Enable interrupt on overflow.
-  TIMSK |= (1 << TOIE0);
-  // In fast PWM mode, the timer overflows at OCR0A
-  // Our timer / OCR0A = SAMPLE RATE
-  // Do make sure this is under 255..
-  OCR0A = SAMPLE_CLOCK_DIVIDER;
-  
-  sei();
-  // Enable interrupts
+  TIMSK |= (1 <<OCIE0A);
+  OCR0A = SAMPLE_CLOCK_DIVIDER / 2;
+  DDRB |= (1 << PB2);
 #endif
+}
+
+bool get_pin(int pin) {
+ return (PORTB & (1 << pin)) > 0;
+}
+
+void set_pin(int pin, bool val) {
+	PORTB = (PORTB & ~((char)(1 << pin))) | ((val ? 1 : 0) << pin);
 }
 
 void do_song_tick(void);
@@ -117,7 +120,7 @@ volatile uint8_t task_bits = 0;
 ISR(TIMER1_OVF_vect)
 #endif
 #if defined (__AVR_ATtiny85__)
-ISR(TIMER0_OVF_vect)
+ISR(TIMER0_COMPA_vect)
 #endif
 {
 #if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__)
@@ -125,6 +128,7 @@ ISR(TIMER0_OVF_vect)
 #endif
 #if defined (__AVR_ATtiny85__)
   OCR1B = sample_buffer[sample_buf_clock++];
+//  set_pin(PB2, !get_pin(PB2));
 #endif
 //  PORTB ^= (1 << PORTB5);
   ++sample_cnt;
@@ -195,13 +199,10 @@ void waitMS(uint16_t ms) {
 }
 void initPWMB(void) {
 #if defined (__AVR_ATtiny85__)
-  // set up timer 2 - this will be the output PWM
-  TCCR2 |= ((1 << WGM21) | (1 << WGM20)); // Fast-PWM (p.115)
-  TCCR2 |= (1 << COM21); // non-inverting OC2 pin output (p115)
-  TCCR2 &= ~(1 << COM20);
-  TCCR2 |= (1 << CS10); // prescale 1x
-  OCR2 = 0;
-  DDRB |= (1 << DDB3); // Enable OC2 (PB3) as output
+  TCCR1 = (1 << CS10); // Run at PCK/1
+  GTCCR = (1 << PWM1B) | (1 << COM1B0); //Enable PWMB (pb4)
+  DDRB |= (1 << PB4) ;
+  OCR1C = 0xff;
   #endif
 #if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__)
 
