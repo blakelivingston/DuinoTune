@@ -99,7 +99,6 @@ void initSampleInterrupt(void) {
   // Enable interrupt on overflow.
   TIMSK |= (1 <<OCIE0A);
   OCR0A = SAMPLE_CLOCK_DIVIDER / 2;
-  DDRB |= (1 << PB2);
 #endif
 }
 
@@ -128,9 +127,7 @@ ISR(TIMER0_COMPA_vect)
 #endif
 #if defined (__AVR_ATtiny85__)
   OCR1B = sample_buffer[sample_buf_clock++];
-//  set_pin(PB2, !get_pin(PB2));
 #endif
-//  PORTB ^= (1 << PORTB5);
   ++sample_cnt;
   ++song_info.tick_smp_count;
   static bool sample_processing = 0;
@@ -151,7 +148,6 @@ ISR(TIMER0_COMPA_vect)
   if ((!sample_processing) && fill_sample_buffer && !(task_bits & SYNTH_TASK)) {
     sample_processing = 1;
     task_bits |= SYNTH_TASK;
-    PORTB |= 1;
     sei();
     //memset(&sample_buffer[sample_update_idx], 0, SAMPLE_BUFFER);
     for (uint8_t i = 0; i < N_VOICES; ++i) {
@@ -164,7 +160,6 @@ ISR(TIMER0_COMPA_vect)
       tmp = MAX(tmp, -0x7f);
       sample_buffer[sample_update_idx + i] = tmp + 0x80;
     }
-    PORTB &= ~1;
     task_bits &= ~SYNTH_TASK;
     sample_processing = 0;
     return;
@@ -182,10 +177,8 @@ ISR(TIMER0_COMPA_vect)
       // If it takes longer than the tick itself, then you have problems.
       task_bits |= SONG_TASK;
       sei();
-      PORTB |= 2;
       song_info.tick_smp_count = 0;
       do_song_tick();
-      PORTB &= ~2;
       task_bits &= ~SONG_TASK;
     }
     pattern_processing = 0;
@@ -205,15 +198,12 @@ void initPWMB(void) {
   OCR1C = 0xff;
   #endif
 #if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__)
-
-//  TCCR2A = (1 << CS10); // Run at PCK/1
-  TCCR2B = (1 << CS20);
+  TCCR2B = (1 << CS20); // Run at PCK/1
   TCCR2A = (1 << COM2B0 ) | (1 << COM2B1 ) | (1 << WGM21) | (1 << WGM20); // Run at PCK/1 Set OC2B on Compare Match
   // This should give us a 16 mhz PWM clock.
   DDRD |= (1 << PD3); // Output on pD3
 //  OCR2A = 0x80;
 #endif
-
 }
 
 void initTinyTune(void) {
@@ -270,42 +260,6 @@ void _getSampleNOISE(struct TTVOICE* v) {
   v->_params.pwm.duty_period = val;
 }
 
-//void _getSamplePWM_ASM(struct TTVOICE* v) {
-  //asm volatile (
-      //"samp_loop_p:\n"
-      //"movw %[vol], %[s_vol]\n"
-      //"cp %A[err],  %A[s_rate]\n"
-      //"cpc %B[err], %B[s_rate]\n"
-      //"brlo no_new_cycle\n"
-      //"sub %A[err], %A[s_rate]\n"
-      //"sbc %B[err], %B[s_rate]\n"
-      //"no_new_cycle:\n"
-      //"add %A[err], %A[hz]\n"
-      //"adc %B[err], %B[hz]\n"
-      //"cp %A[err],  %A[duty_pd]\n"
-      //"cpc %B[err], %B[duty_pd]\n"
-      //"brlo no_vol_flip\n"
-      //"movw %[vol], %[ns_vol]\n"
-      //"no_vol_flip:\n"
-      //"ld __tmp_reg__, %a[out_buf]\n"
-      //"add  __tmp_reg__, %A[vol]\n"
-      //"st %a[out_buf]+, __tmp_reg__\n"
-      //"ld __tmp_reg__, %a[out_buf]\n"
-      //"adc __tmp_reg__,  %B[vol]\n"
-      //"st %a[out_buf]+, __tmp_reg__\n"
-      //"subi %[buf_len], 1\n"
-      //"brne samp_loop_p\n":
-      //[err] "+w" (v->_err):
-      //[hz] "r" (v->hz),
-      //[s_vol] "r" ((uint16_t)v->_s_volume),
-      //[ns_vol] "r" ((uint16_t)-v->_s_volume),
-      //[vol] "r" ((uint16_t) 0),
-      //[s_rate] "r" ((uint16_t)SAMPLE_RATE),
-      //[buf_len] "r" (SAMPLE_BUFFER / 2),
-      //[out_buf] "e" (&sample_buffer[sample_update_idx]),
-      //[duty_pd] "r" (v->_params.pwm.duty_period)
-  //);
-//}
 
 void _getSampleTRI(struct TTVOICE* v) {
   uint8_t lp = SAMPLE_BUFFER / 2;
@@ -334,58 +288,6 @@ void _getSampleTRI(struct TTVOICE* v) {
   v->_params.tri.level = lev;
   v->_err = err;
 }
-
-//void _getSampleTRI_ASM(struct TTVOICE* v) {
-  //asm volatile (
-      //"samp_loop:\n"
-      //"cp %A[err], %A[s_rate]\n"
-      //"cp %B[err], %B[s_rate]\n"
-      //"brlo skip_period\n"
-      //"; Reset err term and level\n"
-      //"sub %A[err], %A[s_rate];   reset err to period for countdown\n"
-      //"sbc %B[err], %B[s_rate];   reset err to period for countdown\n"
-      //"movw %[lev], %[fp_vol]\n"
-      //"skip_period:\n"
-      //"add %A[err], %A[hz]\n"
-      //"adc %B[err], %B[hz]\n"
-      //"cp %A[err],%A[rise_p]\n"
-      //"cpc %B[err],%B[rise_p]\n"
-      //"brlo rising\n"
-      //"add %A[lev], %A[fall_slp]\n"
-      //"adc %B[lev], %B[fall_slp]\n"
-      //"rjmp done_slopes\n"
-      //"rising:\n"
-      //"add %A[lev], %A[rise_slp]\n"
-      //"adc %B[lev], %B[rise_slp]\n"
-      //"done_slopes:\n"
-      //"movw r2,%[lev]\n"
-      //"lsl r2\n" // signed right shift by 7 voodoo
-      //"mov r2, r3\n"
-      //"rol r3\n"
-      //"sbc r3, r3\n"
-      //"lsl r2\n" //This can be optimized into the above shift..
-      //"rol r3\n"
-      //"ld __tmp_reg__, %a[out_buf]\n"
-      //"add r2, __tmp_reg__\n"
-      //"st %a[out_buf]+, r2\n"
-      //"ld __tmp_reg__, %a[out_buf]\n"
-      //"adc __tmp_reg__, r3\n"
-      //"st %a[out_buf]+, __tmp_reg__\n"
-      //"subi %[buf_len], 1\n"
-      //"brne samp_loop\n":
-      //[err] "+w" (v->_err),
-      //[lev] "+w" (v->_params.tri.level):
-      //[buf_len] "r" (SAMPLE_BUFFER / 2),
-      //[out_buf] "e" (&sample_buffer[sample_update_idx]),
-      //[s_rate] "r" ((uint16_t)SAMPLE_RATE),
-      //[hz] "r" ((uint16_t)v->hz),
-      //[fp_vol] "r" (v->_params.tri.fp_vol),
-      //[rise_p] "r" (v->_params.tri.rise_period),
-      //[rise_slp] "r" (v->_params.tri.rise_slp),
-      //[fall_slp] "r" (v->_params.tri.fall_slp),
-      //[bcrunch] "r" (v->bcrunch)
-      //:"r2", "r3");
-//}
 
 void _setDutyPWM(struct TTVOICE* v, uint8_t duty) {
   if (duty < 0x80)
