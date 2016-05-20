@@ -555,6 +555,25 @@ void setEnvelope(uint8_t voice, const struct TTENVELOPE* envelope) {
   }
 }
 
+void setInstrument(uint8_t voice, const struct TTINSTRUMENT* instrument){
+	 switch(instrument->voice_type) {
+	 case TT_PWM:
+		 initVoicePWM(voice);
+		 break;
+	 case TT_TRI:
+		 initVoiceTRI(voice);
+		 break;
+	 case TT_NOISE:
+		 initVoiceNOISE(voice);
+		 break;
+	 }
+	 if (instrument->envelope != 0 ) {
+		 setEnvelope(voice, instrument->envelope);
+	 }
+	 setDuty(voice, instrument->duty);
+	 setBitCrunch(voice, instrument->bitcrush);
+}
+
 //ticks_sec is in 12.4 fixed point
 void playSong(struct song_definition* song) {
   // Yeah, fixed point.
@@ -635,9 +654,9 @@ void do_song_tick(void) {
         done_row = 1;
       }
         break;
-      case SET_ENV: {
-        uint8_t env_id = pgm_read_byte(&(cur_pat[song_info.pat_idx++]));
-        setEnvelope(voice, song_info.song_def->envelopes[env_id]);
+      case SET_INST: {
+        uint8_t inst_id = pgm_read_byte(&(cur_pat[song_info.pat_idx++]));
+        setInstrument(voice, song_info.song_def->instruments[inst_id]);
       }
         break;
       case SET_GLIDE_SPEED: {

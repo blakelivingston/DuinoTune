@@ -9,7 +9,7 @@ extern "C" {
 #define NOTE_OFF 1
 #define ROW_ADV 3
 #define SET_VOL 4
-#define SET_ENV 5
+#define SET_INST 5
 #define SET_GLIDE_SPEED 6
 #define PORTAMENTO 7
 #define NOTE_ON_FULL_VOL 8
@@ -22,6 +22,7 @@ typedef uint8_t* PROGMEM songdata;
 
 // forward declarations
 struct TTENVELOPE;
+struct TTINSTRUMENT;
 struct song_definition;
 
 // Initializes the system. This must be called before any synthesis can occur.
@@ -68,6 +69,8 @@ void setBitCrunch(uint8_t voice, uint8_t crunch);
 // Sets the envelope to use during song playback on this channel.
 void setEnvelope(uint8_t voice, const struct TTENVELOPE* envelope);
 
+void setInstrument(uint8_t voice, const struct TTINSTRUMENT* instrument);
+
 /*	Sets the portamento rate on this voice. p_rate is a 12.4 fixed point frequency
 	multiplier applied per song tick.
 */
@@ -84,7 +87,7 @@ void playSong(struct song_definition* song_def);
 
 // Internal data structures.
 
-struct TTENVELOPE {
+typedef struct TTENVELOPE {
   int8_t num_points;
   // Fixed point 9.7 starting volume;
   uint8_t starting_level;
@@ -94,7 +97,14 @@ struct TTENVELOPE {
   uint8_t* point_ticks;
   // Tick to halt envelope until note off.
   uint8_t sustain_tick;
-};
+} TTENVELOPE;
+
+typedef struct TTINSTRUMENT {
+	uint8_t voice_type;
+	uint8_t duty;
+	uint8_t bitcrush;
+	TTENVELOPE* envelope;
+} TTINSTRUMENT;
 
 struct TTVOICE {
   enum {
@@ -159,7 +169,7 @@ struct song_definition {
   uint16_t bpm;
   uint8_t rows_per_beat;
   uint8_t ticks_per_row;
-  const struct TTENVELOPE** envelopes;
+  const struct TTINSTRUMENT** instruments;
 };
 
 struct song_info {

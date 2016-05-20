@@ -6,7 +6,7 @@ import os
 import sys
 import zipfile
 
-class Envelope(object):
+class Inst(object):
     env_tpl = """
   static int16_t slopes_%d[] = {%s};
   static uint8_t pticks_%d[] = {%s};
@@ -18,6 +18,34 @@ class Envelope(object):
     .sustain_tick = %d
   };
   """
+    inst_tpl = """
+static struct TTINSTRUMENT inst_%d = {
+    .voice_type=%d,
+    .duty=%d,
+    .bitcrush=%d,
+    .envelope=%s
+};
+    """
+
+    def __init__(self):
+        self.has_env = False
+        self.has_voice = False
+        self.type = 0;
+        self.duty = 0x80
+        self.bitcrush = 8
+
+    type_to_voice_type_enum = {
+        "SQR": 0,
+        "TRI": 1,
+        "NOISE": 2
+    }
+    def parse_voice_from_name(self, vname):
+        if len(vname.split(':')) == 3:
+            self.has_voice = True
+            type, duty, bitcrush = vname.split(':')
+            self.type = self.type_to_voice_type_enum[type]
+            self.duty = int(duty, 16)
+            self.bitcrush = int(bitcrush)
 
     def parse(self, env, tpl, lpb):
         def beats_to_songticks(b):
@@ -25,8 +53,8 @@ class Envelope(object):
 
         if env.find('IsActive/Value').text =="1.0":
             self.active = True
+            self.has_env = True
         else:
-            self.active = False
             return
         if env.find('SustainIsActive').text == 'true':
 
@@ -62,15 +90,22 @@ class Envelope(object):
             self.tick_deltas.append(t_d)
 
     def c_dump(self, env_idx):
-        slopes = ", ".join((str(sl) for sl in self.slopes))
-        pticks = ", ".join((str(min(pt, 255)) for pt in self.tick_deltas))
-        dump = self.env_tpl % (env_idx, slopes,
-                               env_idx, pticks,
-                               env_idx,
-                               len(self.slopes),
-                               self.start_level,
-                               env_idx, env_idx,
-                               self.sustain_pt)
+        dump = ""
+        if self.has_env:
+            slopes = ", ".join((str(sl) for sl in self.slopes))
+            pticks = ", ".join((str(min(pt, 255)) for pt in self.tick_deltas))
+            dump += self.env_tpl % (env_idx, slopes,
+                                   env_idx, pticks,
+                                   env_idx,
+                                   len(self.slopes),
+                                   self.start_level,
+                                   env_idx, env_idx,
+                                   self.sustain_pt)
+        dump += self.inst_tpl % (env_idx,
+                                 self.type,
+                                 self.duty,
+                                 self.bitcrush,
+                                 ("&env_%d" % env_idx) if self.has_env else '0' )
         return dump
 
 def xrns_to_tt(input_file,
@@ -96,17 +131,23 @@ def xrns_to_tt(input_file,
 
     patterns = []
 
-    instruments = song.find('Instruments')
-    envelopes = []
+    song_instruments = song.find('Instruments')
+    instruments = []
     inst_remap = {}
-    for inst_id, inst in enumerate(instruments):
+
+    for inst_id, inst in enumerate(song_instruments):
+        # print inst.tag,[(x.tag,x.text) for x in list(inst)]
         vol_env = inst.find('.//SampleEnvelopeModulationDevice')
-        if vol_env is not None:
-            env = Envelope()
-            env.parse(vol_env, tpl, lpb)
-            if env.active:
-                inst_remap[inst_id] = len(envelopes)
-                envelopes.append(env)
+        name = inst.find('.//Name')
+        if (name is not None) or (vol_env is not None):
+            inst = Inst()
+            if (name is not None):
+                inst.parse_voice_from_name(name.text)
+            if vol_env is not None:
+                inst.parse(vol_env, tpl, lpb)
+            if inst.has_env or inst.has_voice:
+                inst_remap[inst_id] = len(instruments)
+                instruments.append(inst)
 
     total_notes = 0
 
@@ -155,7 +196,7 @@ def xrns_to_tt(input_file,
     NOTE_OFF = 1
     ROW_ADV = 3
     SET_VOL = 4
-    SET_ENV = 5
+    SET_INST = 5
     SET_GLIDE_SPEED = 6
     PORTAMENTO = 7
     NOTE_ON_FULL_VOL = 8
@@ -263,7 +304,7 @@ def xrns_to_tt(input_file,
                     volume is not None or
                     inst is not None):
                     if inst is not None:
-                        tcode = mkcode(t_idx, SET_ENV)
+                        tcode = mkcode(t_idx, SET_INST)
                         tt_line.extend([tcode, inst])
                     if note_val is not None:
                         tcode = mkcode(t_idx, NOTE_ON)
@@ -324,7 +365,7 @@ def xrns_to_tt(input_file,
   static const uint8_t* const p_dat[] PROGMEM = {%s};
   static const uint16_t p_len[] PROGMEM = {%s};
   static const uint8_t p_ord[] PROGMEM = {%s};
-  static const struct TTENVELOPE* envs[] = {%s};
+  static const struct TTINSTRUMENT* instruments[] = {%s};
   struct song_definition %s = {
   .pattern_data = p_dat,
   .num_patterns = %d,
@@ -333,7 +374,7 @@ def xrns_to_tt(input_file,
   .bpm = %s,
   .rows_per_beat = %s,
   .ticks_per_row = %s,
-  .envelopes = envs,
+  .instruments = instruments,
   };
     """
 
@@ -357,13 +398,13 @@ def xrns_to_tt(input_file,
     pat_defs = "\n".join(["static const uint8_t pattern_%d[] PROGMEM = {\n%s\n};" % (pid, ',\n'.join(data))
                           for pid, data in enumerate(pattern_output)])
 
-    env_defs = "\n".join(e.c_dump(idx) for idx, e in enumerate(envelopes))
+    inst_defs = "\n".join(e.c_dump(idx) for idx, e in enumerate(instruments))
 
-    c_output = c_tmpl % (env_defs, pat_defs, ",\n".join(
+    c_output = c_tmpl % (inst_defs, pat_defs, ",\n".join(
         ["pattern_%d" % i for i in range(len(pattern_output))]),
         ", ".join([str(l) for l in pattern_lengths]),
         ", ".join([str(l) for l in sequence]),
-        ", ".join(["&env_%d" % i for i in range(len(envelopes))]),
+        ", ".join(["&inst_%d" % i for i in range(len(instruments))]),
         song_name,
         len(sequence),
         bpm,
