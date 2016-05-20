@@ -69,23 +69,24 @@ def song_convert_watcher():
 
     def songWatcher():
         while running:
-            song_stats= [(path.join(in_dir.get(),f),stat((path.join(in_dir.get(),f))).st_mtime)
-                for f in  listdir(in_dir.get()) if f.endswith(".xrns")]
+            if in_dir.get() and out_dir.get():
+                song_stats= [(path.join(in_dir.get(),f),stat((path.join(in_dir.get(),f))).st_mtime)
+                    for f in  listdir(in_dir.get()) if f.endswith(".xrns")]
 
-            for songfile, modtime in song_stats:
-                song_basename = path.splitext(path.basename(songfile))[0]
-                out_path = path.join(out_dir.get(), song_basename, "src")
-                mkdir_p(out_path)
-                out_path_songname=path.join(out_path, song_basename)
-                if path.exists(out_path_songname + ".c"):
-                    out_song_mtime = stat(out_path_songname + ".c").st_mtime
-                else:
-                    out_song_mtime = 0
-                if modtime > out_song_mtime:
-                    # The song has been changed Re-export!!
-                    xrns2tt.xrns_to_tt(songfile, out_path_songname, {})
-                    write_library_file(out_dir.get(), song_basename)
-                    tlog.insert("1.0", "Song: %s changed.\nUpdated Arduino library at: %s\n" % (songfile, out_path_songname))
+                for songfile, modtime in song_stats:
+                    song_basename = path.splitext(path.basename(songfile))[0]
+                    out_path = path.join(out_dir.get(), song_basename, "src")
+                    mkdir_p(out_path)
+                    out_path_songname=path.join(out_path, song_basename)
+                    if path.exists(out_path_songname + ".c"):
+                        out_song_mtime = stat(out_path_songname + ".c").st_mtime
+                    else:
+                        out_song_mtime = 0
+                    if modtime > out_song_mtime:
+                        # The song has been changed Re-export!!
+                        xrns2tt.xrns_to_tt(songfile, out_path_songname, {})
+                        write_library_file(out_dir.get(), song_basename)
+                        tlog.insert("1.0", "Song: %s changed.\nUpdated Arduino library at: %s\n" % (songfile, out_path_songname))
             time.sleep(1)
 
     threading.Thread(target=songWatcher).start()
