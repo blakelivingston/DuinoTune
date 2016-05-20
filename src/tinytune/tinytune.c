@@ -241,20 +241,29 @@ void _getSamplePWM(struct TTVOICE* v) {
 }
 
  static inline uint8_t prnd(void)  {
-  static volatile uint8_t x = ~0;
-  x += TCNT1;
-  x ^= 0xb5;
-  return x;
+  // Cheap pseudo random noise with a linear feedback shift register.
+  // https://en.wikipedia.org/wiki/Linear-feedback_shift_register
+  static volatile uint16_t state = 0xACA1u;
+  uint8_t lsb = state & 1;
+  state = state >> 1;
+  state ^= (-lsb) & 0xB400u;
+  return state & 0xff;
 }
 
 void _getSampleNOISE(struct TTVOICE* v) {
+
   int8_t val = v->_params.pwm.duty_period;
   uint16_t hz4 = v->hz << 4;
   for (uint8_t i = 0; i < SAMPLE_BUFFER / 2; ++i) {
     v->_err += hz4;
     if (v->_err >= SAMPLE_RATE) {
       v->_err -= SAMPLE_RATE;
+#if defined(__AVR_ATtiny85__)
       val = four_bit_scale(prnd(), (v->_s_volume >> 3));
+#endif
+#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__)
+      val = (prnd() * v->_s_volume) >> 8;
+#endif
     }
     sample_buffer[sample_update_idx + i] += val;
   }

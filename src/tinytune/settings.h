@@ -12,7 +12,7 @@
 #endif
 
 #if defined (__AVR_ATmega328P__) || defined(__AVR_ATmega168__)
-#define SAMPLE_RATE 32000UL
+#define SAMPLE_RATE 34000UL
 #endif
 // Max number of voices
 #define N_VOICES 5
