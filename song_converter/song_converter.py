@@ -85,10 +85,11 @@ def song_convert_watcher():
                         else:
                             out_song_mtime = 0
                         if modtime > out_song_mtime:
+                            tlog.insert("1.0", "Song: %s changed.\nUpdated Arduino library at: %s\n" % (
+                            songfile, out_path_songname))
                             # The song has been changed Re-export!!
                             xrns2tt.xrns_to_tt(songfile, out_path_songname, {})
                             write_library_file(out_dir.get(), song_basename)
-                            tlog.insert("1.0", "Song: %s changed.\nUpdated Arduino library at: %s\n" % (songfile, out_path_songname))
             except Exception, e:
                 tlog.insert("1.0", "Error translating song: %s\n Trace: %s\n" % (e, traceback.format_exc()))
             time.sleep(1)

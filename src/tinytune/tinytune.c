@@ -262,7 +262,7 @@ void _getSampleNOISE(struct TTVOICE* v) {
       val = four_bit_scale(prnd(), (v->_s_volume >> 3));
 #endif
 #if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__)
-      val = (prnd() * v->_s_volume) >> 8;
+      val = (prnd() * v->_s_volume) >> 7; // Should be 8, technically, but not loud enough...
 #endif
     }
     sample_buffer[sample_update_idx + i] += val;

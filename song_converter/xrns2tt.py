@@ -40,9 +40,9 @@ static struct TTINSTRUMENT inst_%d = {
         "NOISE": 2
     }
     def parse_voice_from_name(self, vname):
-        if len(vname.split(':')) == 3:
+        if len(vname.split('_')) >= 3:
             self.has_voice = True
-            type, duty, bitcrush = vname.split(':')
+            type, duty, bitcrush = vname.split('_')[:3]
             self.type = self.type_to_voice_type_enum[type]
             self.duty = int(duty, 16)
             self.bitcrush = int(bitcrush)
@@ -86,8 +86,9 @@ static struct TTINSTRUMENT inst_%d = {
             d = levels[i] - levels[i - 1]
             t_d = env_ticks[i] - env_ticks[i - 1]
             # We're rolling 9.7 bit fixed point on the slopes.
-            self.slopes.append((int(d * 255) << 7) / t_d)
-            self.tick_deltas.append(t_d)
+            if t_d > 0:
+                self.slopes.append((int(d * 255) << 7) / t_d)
+                self.tick_deltas.append(t_d)
 
     def c_dump(self, env_idx):
         dump = ""
