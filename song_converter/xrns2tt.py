@@ -420,7 +420,7 @@ def xrns_to_tt(input_file,
     h_outfile.close()
 
 if __name__ == "__main__":
-    option_parser = optparse.OptionParser(usage="usage: %prog [options] input.xrns [input2.xrns input3.xsnr ...]\n")
+    option_parser = optparse.OptionParser(usage="usage: %prog [options] input.xrns [input2.xrns input3.xrns ...]\n")
     option_parser.add_option("--tuning_dict", dest="tuning", action="store",
                        type="string", default=None,
                        help="Per-channel tuning offset. E.g. "
