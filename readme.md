@@ -25,15 +25,15 @@ Features
 * A resistor capacitor lowpass filter can be used to smooth the PWM output into a reasonably clean audio signal, suitable for driving small headphones or input into an amplifier circuit.
 
 ### Synthesis
-* Can play as many simultaneous voices as the MCU speed and RAM can accommodate
+* Can play as many simultaneous voices as the CPU speed and RAM can accommodate
 * Offers the following voice types:
 	* PWM (square wave), with adjustable duty cycle
-	* Triangle/Saw wave, continuously adjustable between the two waveforms
-	* Noise channel. This is currently usable, but slow. Improvements are planned
+	* Triangle/Saw wave, continuously adjustable between the two waveforms (use the duty cycle setting)
+	* Noise channel.
 * Adjustable playback volume
 * Interrupt based, and can run in the background
 * Bit Crush
-	* Reduces output waveform bit depth. Makes most sense on triangle waves. Try a BitCrush of 4 on a TRI wave for that old-school NES tri sound.
+	* Reduces output waveform bit depth. Makes most sense on triangle waves. Try a BitCrush of 4 on a TRI wave for that old-school NES triangle wave sound.
 
 ### Song playback
 * Arbitrary envelopes, including sustain and release. Just add a Volume Envelope to the instrument in Renoise.
