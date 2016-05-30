@@ -132,8 +132,6 @@ ISR(TIMER0_COMPA_vect)
   ++song_info.tick_smp_count;
   static bool sample_processing = 0;
   
-  
-  
   if (sample_buf_clock == SAMPLE_BUFFER)
   sample_buf_clock = 0;
   uint8_t fill_sample_buffer = 0;
@@ -195,7 +193,7 @@ void initPWMB(void) {
   TCCR1 = (1 << CS10); // Run at PCK/1
   GTCCR = (1 << PWM1B) | (1 << COM1B0); //Enable PWMB (pb4)
   DDRB |= (1 << PB4) ;
-  OCR1C = 0xff;
+  OCR1C = 0xff; // Counter resets on OCR1C
   #endif
 #if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__)
   TCCR2B = (1 << CS20); // Run at PCK/1

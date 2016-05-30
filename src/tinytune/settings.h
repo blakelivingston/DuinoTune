@@ -8,15 +8,15 @@
 // amusingly with sample buffer size changes. It's like the chip will break.
 // Some sounds take on an almost vocal quality in their distortion at 65000hz
 #if defined (__AVR_ATtiny85__)
+#define N_VOICES 5
 #define SAMPLE_BUFFER 16
 #define SAMPLE_RATE 14000UL
 #endif
-
 #if defined (__AVR_ATmega328P__) || defined(__AVR_ATmega168__)
+#define N_VOICES 11
 #define SAMPLE_BUFFER 64
-#define SAMPLE_RATE 14000UL
+#define SAMPLE_RATE 22000UL
 #endif
 // Max number of voices
-#define N_VOICES 11
 // Right shift divide for output waveform. Use for course global volume setting
 #define OUTPUT_SCALE_SHIFT 3
