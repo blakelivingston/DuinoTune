@@ -12,7 +12,7 @@ There is also an import utility that generates embeddable code representations o
 
 Example video, running into an oscilloscope: <a href="https://www.youtube.com/watch?v=PtxxCKs822M">https://www.youtube.com/watch?v=PtxxCKs822M</a>
 
-
+Another Example: [https://www.youtube.com/watch?v=G3baH5iTcFM](https://www.youtube.com/watch?v=G3baH5iTcFM)
 Features
 ---
 
@@ -25,15 +25,15 @@ Features
 * A resistor capacitor lowpass filter can be used to smooth the PWM output into a reasonably clean audio signal, suitable for driving small headphones or input into an amplifier circuit.
 
 ### Synthesis
-* Can play as many simultaneous voices as the MCU speed and RAM can accommodate
+* Can play as many simultaneous voices as the CPU speed and RAM can accommodate
 * Offers the following voice types:
 	* PWM (square wave), with adjustable duty cycle
-	* Triangle/Saw wave, continuously adjustable between the two waveforms
-	* Noise channel. This is currently usable, but slow. Improvements are planned
+	* Triangle/Saw wave, continuously adjustable between the two waveforms (use the duty cycle setting)
+	* Noise channel.
 * Adjustable playback volume
 * Interrupt based, and can run in the background
 * Bit Crush
-	* Reduces output waveform bit depth. Makes most sense on triangle waves. Try a BitCrush of 4 on a TRI wave for that old-school NES tri sound.
+	* Reduces output waveform bit depth. Makes most sense on triangle waves. Try a BitCrush of 4 on a TRI wave for that old-school NES triangle wave sound.
 
 ### Song playback
 * Arbitrary envelopes, including sustain and release. Just add a Volume Envelope to the instrument in Renoise.
@@ -55,8 +55,8 @@ Documentation and Demos
 ### Getting Started
 DuinoTune is built to be super easy to use! There are, however, a few dependencies needed to use it.
 
-* Download [Python 2.7](https://www.python.org/downloads/) - this is needed for song conversion.
-* Download [Renoise Demo 3.1](http://renoise.com/download) - this is used for song editing.
+* Download [Python 2.7](https://www.python.org/downloads/) and install - this is needed for song conversion.
+* Download [Renoise Demo 3.1](http://renoise.com/download) and install - this is used for song editing.
 * Install the DuinoTune library into your Arduino libraries folder. On windows this is usually in `Documents\Arduino\Libraries` of your home directory. 
 	* You can install by cloning from GitHub, or by Downloading a zip and unzipping it into the library folder.
 
@@ -65,7 +65,7 @@ DuinoTune is built to be super easy to use! There are, however, a few dependenci
 	* You should now see DuinoTune as one of the options in the Arduino IDE when you go to the Sketch/Include Library menu. If not, check to make sure that it is in your arduino library folder.
 	* Adding the library will automatically include DuinoTune.h. **Make sure that this is included before any of the song header files, and not after! Otherwise compilation will fail.**
 * Start up the song converter utility
-	* Go to the DuinoTune library folder that you just downloaded. Inside, there will be a `song_converter` folder. Go there and run `song_converter.py`. It should run when double clicked if python is installed properly.
+	* Go to the DuinoTune library folder that you just downloaded. Inside, there will be a `song_converter` folder. Go there and run `song_converter.py`. It should open a window when double clicked if python is installed properly.
 	* Once the converter window opens. Click on the `Pick Output Directory` button - then choose your Arduino Library Folder, probably: `Documents\Arduino\Libraries`
 	* Next click the Pick Input Directory button and choose the `test_songs` folder under DuinoTune
 
@@ -73,7 +73,7 @@ Once this is done, the converter should find your songs and generate Arduino Lib
 
 Now that the libraries are created, go back to your Sketch. In the Sketch/Include Library menu, you should now see Contributed Libraries for the songs!
 
-Pick the Zelda library. This will include zelda.h, but you may need to move this include line to after DuinoTune.
+Pick the Zelda song (or another, if you like) library. This will include zelda.h, but you may need to move this include line to after DuinoTune.
 
 Now, update your setup function to include DuinoTune's initialization and start song playback. Your sketch will probably look something like this:
 
@@ -86,7 +86,7 @@ Now, update your setup function to include DuinoTune's initialization and start 
 	void setup()
 	{
 	// Add your initialization code here
-		initTinyTune();
+		initTinyTune(); // It used to be called TinyTune, before porting to arduino
 		playSong(&zelda);
 	}
 	
