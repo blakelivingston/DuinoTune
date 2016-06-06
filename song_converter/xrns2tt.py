@@ -297,10 +297,9 @@ def xrns_to_tt(input_file,
 
                         if v is not None and track_volumes.get(t_idx, -1) != v:
                             track_volumes[t_idx] = v
-                            volume = v
+                            volume = min(v, 255)
                         else:
                             volume = None
-                        # print "VOLv",volume, t_idx, v,track_volumes
                 if (note_val is not None or
                     volume is not None or
                     inst is not None):
