@@ -60,6 +60,8 @@ DuinoTune is built to be super easy to use! There are, however, a few dependenci
 * Install the DuinoTune library into your Arduino libraries folder. On windows this is usually in `Documents\Arduino\Libraries` of your home directory. 
 	* You can install by cloning from GitHub, or by Downloading a zip and unzipping it into the library folder.
 
+There is a video walk-through to help get started on YouTube: [https://www.youtube.com/watch?v=mtrslXPgELw](https://www.youtube.com/watch?v=mtrslXPgELw)
+
 ### Playing a Demo Song
 * Set up a sketch for your Arduino
 	* You should now see DuinoTune as one of the options in the Arduino IDE when you go to the Sketch/Include Library menu. If not, check to make sure that it is in your arduino library folder.
