@@ -17,7 +17,10 @@ extern "C" {
 #include <avr/pgmspace.h>
 #include <inttypes.h>
 
+#ifndef __cplusplus
 typedef char bool;
+#endif
+
 typedef uint8_t* PROGMEM songdata;
 
 // forward declarations
