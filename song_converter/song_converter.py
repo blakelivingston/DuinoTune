@@ -4,6 +4,7 @@ try:
     try:
         import ttk
     except:
+        print "nottk"
         import tkinter.ttk as ttk
     try:
         import tkFileDialog
@@ -12,6 +13,7 @@ try:
 except:
     from Tkinter import *
     import tkFileDialog
+    import ttk
 import time
 
 import threading
