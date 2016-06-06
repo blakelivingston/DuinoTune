@@ -1,11 +1,19 @@
 import xrns2tt
 try:
     from tkinter import *
+    try:
+        import ttk
+    except:
+        import tkinter.ttk as ttk
+    try:
+        import tkFileDialog
+    except:
+        import tkinter.filedialog as tkFileDialog
 except:
     from Tkinter import *
     import tkFileDialog
 import time
-import ttk
+
 import threading
 from os import stat,listdir
 import os.path as path
@@ -37,12 +45,12 @@ def song_convert_watcher():
     out_dir = StringVar()
     in_dir = StringVar()
     def save_state():
-        file(".songconverterstate", "w+").write("%s\n%s" %(in_dir.get(), out_dir.get()))
+        open(".songconverterstate", "w+").write("%s\n%s" %(in_dir.get(), out_dir.get()))
 
     def load_state():
 
         try:
-            indir, outdir = map(lambda x:x.strip() ,file(".songconverterstate", "r").readlines())
+            indir, outdir = map(lambda x:x.strip() ,open(".songconverterstate", "r").readlines())
             in_dir.set(indir)
             out_dir.set(outdir)
         except IOError:
@@ -90,7 +98,7 @@ def song_convert_watcher():
                             # The song has been changed Re-export!!
                             xrns2tt.xrns_to_tt(songfile, out_path_songname, {})
                             write_library_file(out_dir.get(), song_basename)
-            except Exception, e:
+            except Exception as e:
                 tlog.insert("1.0", "Error translating song: %s\n Trace: %s\n" % (e, traceback.format_exc()))
             time.sleep(1)
 
@@ -109,8 +117,7 @@ category=Data Storage
 url=http://example.com/
 architectures=avr
 """ % songname
-    ofile = file(path.join(out_dir, songname, "library.properties"), "w+")
-    print "derp", path.join(out_dir, "library.properties")
+    ofile = open(path.join(out_dir, songname, "library.properties"), "w+")
     ofile.write(lib_prop)
     ofile.close()
 

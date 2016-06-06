@@ -118,7 +118,7 @@ def xrns_to_tt(input_file,
     track_info = song.find('Tracks')
     t_idx = 0
     active_tracks = set()
-    print "converting %s" % input_file
+    print ("converting %s" % input_file)
     bpm = int(song.find('*/BeatsPerMin').text)
     lpb = int(song.find('*/LinesPerBeat').text)
     tpl = int(song.find('*/TicksPerLine').text)
@@ -159,7 +159,7 @@ def xrns_to_tt(input_file,
         nlines = int(nlines.text)
         tracks = xpat.find('Tracks')
 
-        notelines = [[None for t in xrange(len(tracks))] for l in xrange(nlines)]
+        notelines = [[None for t in range(len(tracks))] for l in range(nlines)]
         tracknum = 0
         for track in tracks:
             if not tracknum in active_tracks:
@@ -232,7 +232,7 @@ def xrns_to_tt(input_file,
         # to fixed point here.
         return int(0x10000 * (2 ** (((glide_speed / 16.0) / 12.0) / tpb) - 1))
 
-    for p_idx in xrange(len(patterns)):
+    for p_idx in range(len(patterns)):
         if not p_idx in active_patterns:
             continue
         cur_pat = patterns[p_idx]
@@ -242,11 +242,11 @@ def xrns_to_tt(input_file,
         # If there's an envelope at least.
         active_instruments = {}
         track_volumes = {}
-        for l_idx in xrange(len(cur_pat)):
+        for l_idx in range(len(cur_pat)):
             tt_line = []
             cur_line = cur_pat[l_idx]
             fxval = 0
-            for t_idx in xrange(len(cur_line)):
+            for t_idx in range(len(cur_line)):
                 cnote = cur_line[t_idx]
                 if cnote is None or t_idx not in active_tracks:
                     continue
@@ -353,8 +353,8 @@ def xrns_to_tt(input_file,
 
     song_name = os.path.basename(output_base)
 
-    c_outfile = file(c_modulename, 'w+')
-    h_outfile = file(h_modulename, 'w+')
+    c_outfile = open(c_modulename, 'w+')
+    h_outfile = open(h_modulename, 'w+')
 
     c_tmpl = """
   #include "tinytune/tinytune.h"
@@ -428,7 +428,7 @@ if __name__ == "__main__":
     options, values = option_parser.parse_args(sys.argv)
 
     if len(values) < 2:
-        print option_parser.print_usage()
+        print (option_parser.print_usage())
         sys.exit()
     if options.tuning:
         track_tunings = eval(options.tuning)
