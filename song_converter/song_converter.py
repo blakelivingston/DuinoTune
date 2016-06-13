@@ -4,7 +4,6 @@ try:
     try:
         import ttk
     except:
-        print "nottk"
         import tkinter.ttk as ttk
     try:
         import tkFileDialog
