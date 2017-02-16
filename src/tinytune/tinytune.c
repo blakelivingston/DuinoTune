@@ -79,7 +79,7 @@ void initPLL(void) {
 }
 
 void initSampleInterrupt(void) {
-#if defined(__ATmegaXXX__) || defined(__ATMEGA32X__)
+#if defined(__ATmegaXXX__) || defined(__ATMEGA32X__) || defined(__ATmega2560__)
   TIMSK1 |= (1 << TOIE1); // Enable interrupt on timer = OCR1A
   // fast pwm ( WGM13, 12, 11,10) for TOP controlled by OCR1A
   TCCR1B = 0;
@@ -115,10 +115,7 @@ void do_song_tick(void);
 #define SYNTH_TASK 1
 #define SONG_TASK 2
 volatile uint8_t task_bits = 0;
-#if defined(__ATmegaXXX__)
-ISR(TIMER1_OVF_vect)
-#endif
-#if defined(__ATMEGA32X__)
+#if defined(__ATmegaXXX__) || defined(__ATMEGA32X__) || defined(__ATmega2560__)
 ISR(TIMER1_OVF_vect)
 #endif
 #if defined (__ATTINYXX__)
@@ -126,7 +123,7 @@ ISR(TIMER0_COMPA_vect)
 #endif
 {
 
-#if defined(__ATMEGA32X__)
+#if defined(__ATMEGA32X__) || defined(__ATmega2560__)
 OCR0B = sample_buffer[sample_buf_clock++];
 #endif
 #if defined(__ATmegaXXX__)
@@ -212,10 +209,17 @@ void initPWMB(void) {
 #endif
 #if defined(__ATMEGA32X__)
 	// This is NOT the sample clock. it is the continuous 62.5khz pwm.
-	TCCR0A = (1 << COM0B0 ) | (1 << COM0B1 ) | (1 << WGM01) | (1 << WGM00); // Fast PWM & Set OC2B on Compare Match
+	TCCR0A = (1 << COM0B0 ) | (1 << COM0B1 ) | (1 << WGM01) | (1 << WGM00); // Fast PWM & Set OC0B on Compare Match
   TCCR0B = (1 << CS00); // No prescaler pck/1
 	DDRD = (1 << PORTD0); // Output on pD0  (pwm 3 on arduino)
 #endif
+#if defined(__ATmega2560__)
+  // This is NOT the sample clock. it is the continuous 62.5khz pwm.
+  TCCR0A = (1 << COM0B0 ) | (1 << COM0B1 ) | (1 << WGM01) | (1 << WGM00); // Fast PWM & Set OC0B on Compare Match
+  TCCR0B = (1 << CS00); // No prescaler pck/1
+  DDRG = (1 << PORTG5); // Output on pD0  (pwm 3 on arduino)
+#endif
+
 }
 
 void initTinyTune(void) {

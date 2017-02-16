@@ -12,8 +12,14 @@
 	#define __ATTINYXX__
 #endif
 #if defined (__AVR_ATmega328P__) || defined(__AVR_ATmega168__)
-	#define __ATmegaXXX__
-	#define __HASMUL__
+  #define __ATmegaXXX__
+  #define __HASMUL__
+#endif
+
+// Experimental -- untested.
+#if defined (__AVR_ATmega2560__)
+  #define __ATmega2560__
+  #define __HASMUL__
 #endif
 
 #if defined(__AVR_ATmega32U4__)
@@ -26,15 +32,23 @@
 #define SAMPLE_BUFFER 16
 #define SAMPLE_RATE 14000UL
 #endif
+
 #if defined (__ATmegaXXX__)
 #define N_VOICES 11
 #define SAMPLE_BUFFER 64
 #define SAMPLE_RATE 22000UL
 #endif
+
 #if defined (__ATMEGA32X__)
 #define N_VOICES 11
 #define SAMPLE_BUFFER 48
 #define SAMPLE_RATE 12000UL
+#endif
+
+#if defined (__ATmega2560__)
+#define N_VOICES 11
+#define SAMPLE_BUFFER 64
+#define SAMPLE_RATE 22000UL
 #endif
 // Max number of voices
 // Right shift divide for output waveform. Use for course global volume setting
