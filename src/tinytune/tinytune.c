@@ -12,6 +12,7 @@
 #include <avr/portpins.h>
 #include <inttypes.h>
 #include <string.h>
+
 #include "tinytune/tinytune.h"
 
 struct TTVOICE voices[N_VOICES];
@@ -67,7 +68,7 @@ inline int16_t four_bit_scale(int16_t input, uint8_t scale) {
 }
 
 void initPLL(void) {
-  #if defined (__AVR_ATtiny85__)
+  #if defined (__ATTINYXX__)
   PLLCSR = 1 << PLLE; //Enable PLL
   _delay_us(100); // Wait for a sync;
   while (!(PLLCSR & (1 << PLOCK))) {
@@ -78,9 +79,8 @@ void initPLL(void) {
 }
 
 void initSampleInterrupt(void) {
-#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__)
+#if defined(__ATmegaXXX__) || defined(__ATMEGA32X__)
   TIMSK1 |= (1 << TOIE1); // Enable interrupt on timer = OCR1A
-//  TIFR1 = (1 << TOV1);
   // fast pwm ( WGM13, 12, 11,10) for TOP controlled by OCR1A
   TCCR1B = 0;
   TCCR1B |= (1 << WGM12 ) | (1 << WGM13);
@@ -91,7 +91,7 @@ void initSampleInterrupt(void) {
   OCR1AL = SAMPLE_CLOCK_DIVIDER;
   sei();
 #endif
-#if defined (__AVR_ATtiny85__)
+#if defined (__ATTINYXX__)
   // Clock : Sys/8 (2mhz)
   // Fast PWM mode (|WGM0-2)
   TCCR0A = (1 << WGM00) | (1 << WGM01);
@@ -115,17 +115,24 @@ void do_song_tick(void);
 #define SYNTH_TASK 1
 #define SONG_TASK 2
 volatile uint8_t task_bits = 0;
-#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__)
+#if defined(__ATmegaXXX__)
 ISR(TIMER1_OVF_vect)
 #endif
-#if defined (__AVR_ATtiny85__)
+#if defined(__ATMEGA32X__)
+ISR(TIMER1_OVF_vect)
+#endif
+#if defined (__ATTINYXX__)
 ISR(TIMER0_COMPA_vect)
 #endif
 {
-#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__)
+
+#if defined(__ATMEGA32X__)
+OCR0B = sample_buffer[sample_buf_clock++];
+#endif
+#if defined(__ATmegaXXX__)
   OCR2B = sample_buffer[sample_buf_clock++];
 #endif
-#if defined (__AVR_ATtiny85__)
+#if defined (__ATTINYXX__)
   OCR1B = sample_buffer[sample_buf_clock++];
 #endif
   ++sample_cnt;
@@ -189,18 +196,25 @@ void waitMS(uint16_t ms) {
   } while (sample_cnt < dest);
 }
 void initPWMB(void) {
-#if defined (__AVR_ATtiny85__)
+#if defined (__ATTINYXX__)
   TCCR1 = (1 << CS10); // Run at PCK/1
   GTCCR = (1 << PWM1B) | (1 << COM1B0); //Enable PWMB (pb4)
   DDRB |= (1 << PB4) ;
   OCR1C = 0xff; // Counter resets on OCR1C
   #endif
-#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__)
+#if defined(__ATmegaXXX__)
   TCCR2B = (1 << CS20); // Run at PCK/1
   TCCR2A = (1 << COM2B0 ) | (1 << COM2B1 ) | (1 << WGM21) | (1 << WGM20); // Run at PCK/1 Set OC2B on Compare Match
   // This should give us a 16 mhz PWM clock.
   DDRD |= (1 << PD3); // Output on pD3
+
 //  OCR2A = 0x80;
+#endif
+#if defined(__ATMEGA32X__)
+	// This is NOT the sample clock. it is the continuous 62.5khz pwm.
+	TCCR0A = (1 << COM0B0 ) | (1 << COM0B1 ) | (1 << WGM01) | (1 << WGM00); // Fast PWM & Set OC2B on Compare Match
+  TCCR0B = (1 << CS00); // No prescaler pck/1
+	DDRD = (1 << PORTD0); // Output on pD0  (pwm 3 on arduino)
 #endif
 }
 
@@ -246,10 +260,10 @@ void _getSampleNOISE(struct TTVOICE* v) {
     v->_err += hz4;
     if (v->_err >= SAMPLE_RATE) {
       v->_err -= SAMPLE_RATE;
-#if defined(__AVR_ATtiny85__)
+#ifndef __HASMUL__
       val = four_bit_scale(prnd(), (v->_s_volume >> 3));
 #endif
-#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__)
+#if defined(__HASMUL__)
       val = (prnd() * v->_s_volume) >> 7; // Should be 8, technically, but not loud enough...
 #endif
     }
