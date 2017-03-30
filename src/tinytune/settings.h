@@ -16,7 +16,7 @@
   #define __HASMUL__
 #endif
 
-// Experimental -- untested.
+// Experimental
 #if defined (__AVR_ATmega2560__)
   #define __ATmega2560__
   #define __HASMUL__
@@ -48,7 +48,7 @@
 #if defined (__ATmega2560__)
 #define N_VOICES 11
 #define SAMPLE_BUFFER 64
-#define SAMPLE_RATE 22000UL
+#define SAMPLE_RATE 12000UL
 #endif
 // Max number of voices
 // Right shift divide for output waveform. Use for course global volume setting
