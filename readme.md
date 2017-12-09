@@ -1,9 +1,7 @@
 DuinoTune
 ===
 
-DuinoTune is a multi-voice, mult-timbral audio synthesis, song playback/embedding library targeting the AVR based Arduinos, requiring minimal additional electronic components for use in projects. Tested and working on Arduino Uno and Duemilanove (ATmega328P), Arduino Leonardo (ATMega32U-4), and Adafruit Trinket (ATtiny85).
-
-There is also experimental, untested, support for Arduino Mega 2560. Sound will output on PWM pin 4 on this MCU. Let me know if it works!
+DuinoTune is a multi-voice, mult-timbral audio synthesis, song playback/embedding library targeting the AVR based Arduinos, requiring minimal additional electronic components for use in projects. Tested and working on Arduino Uno and Duemilanove (ATmega328P), Arduino Leonardo (ATMega32U-4), Adafruit Trinket (ATtiny85), and the Arduino Mega 2560 (Thanks [Eduardo Fernandes!](https://plus.google.com/u/0/113398746649868119866) for testing).
 
 What Exactly Does It Do?
 ---
