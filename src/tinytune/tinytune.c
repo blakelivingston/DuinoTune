@@ -503,18 +503,31 @@ void setInstrument(uint8_t voice, const struct TTINSTRUMENT* instrument){
 
 //ticks_sec is in 12.4 fixed point
 void playSong(struct song_definition* song) {
-  // Yeah, fixed point.
-  uint16_t ticks_sec = ((song->bpm << 4) / 60) * song->rows_per_beat
-      * song->ticks_per_row;
-  song_info.song_def = song;
-  song_info.pat_idx = 0;
-  song_info.order_idx = 0;
-  song_info.cur_pattern = pgm_read_byte(&song->pattern_order[0]);
-  song_info.tick = 0;
-  song_info.next_tick = 0;
-  song_info.tick_smp_count = 0;
-  song_info.samples_per_tick = ((uint32_t) SAMPLE_RATE << 4) / ticks_sec;
-  song_info.playing = 1;
+  playSongRepeat(song, 0);
+}
+
+void playSongRepeat(struct song_definition* song, uint8_t repeats) {
+	// Yeah, fixed point.
+	uint16_t ticks_sec = ((song->bpm << 4) / 60) * song->rows_per_beat
+	* song->ticks_per_row;
+	song_info.song_def = song;
+	song_info.pat_idx = 0;
+	song_info.order_idx = 0;
+	song_info.cur_pattern = pgm_read_byte(&song->pattern_order[0]);
+	song_info.tick = 0;
+	song_info.next_tick = 0;
+	song_info.tick_smp_count = 0;
+	song_info.samples_per_tick = ((uint32_t) SAMPLE_RATE << 4) / ticks_sec;
+	song_info.playing = 1;
+	song_info.repeats = repeats;
+}
+
+void stopSong() {
+	song_info.playing = 0;
+	for (int i=0; i < N_VOICES; ++i) {
+		setEnable(i, 0);
+		setVolume(i, 0);
+	}
 }
 
 // 14.2 fixed point note hz from c4-b4
@@ -604,8 +617,13 @@ void do_song_tick(void) {
       &(song_info.song_def->pattern_lengths[song_info.cur_pattern]))) {
     song_info.pat_idx = 0;
     song_info.order_idx++;
-    if (song_info.order_idx >= song_info.song_def->num_patterns)
+    if (song_info.order_idx >= song_info.song_def->num_patterns) {
       song_info.order_idx = 0;
+	  if(song_info.repeats > 0) {
+		  song_info.repeats--;
+		  if (song_info.repeats == 0) stopSong();
+	  }
+	}
     song_info.cur_pattern
         = pgm_read_byte(&song_info.song_def->pattern_order[song_info.order_idx]);
   }

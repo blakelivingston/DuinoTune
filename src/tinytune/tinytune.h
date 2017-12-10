@@ -84,9 +84,14 @@ void setPorta(uint8_t voice, bool enable);
 // Waits for ms milliseconds, using the sample clock.
 void waitMS(uint16_t ms);
 
-// Plays back a song, in the background defined by song_def
+// Plays back a song, in the background defined by song_def. Loops forever.
 void playSong(struct song_definition* song_def);
 
+// Plays back a song, in the background defined by song_def. Loops [repeats] times. 1 to play once. 0 plays forever.
+void playSongRepeat(struct song_definition* song_def, uint8_t repeats);
+
+// Stops the song!
+void stopSong();
 
 // Internal data structures.
 
@@ -175,7 +180,7 @@ struct song_definition {
   const struct TTINSTRUMENT** instruments;
 };
 
-struct song_info {
+struct {
   uint16_t samples_per_tick;
   uint16_t tick;
   uint16_t next_tick;
@@ -185,6 +190,7 @@ struct song_info {
   uint8_t order_idx;
   uint16_t pat_idx;
   bool playing;
+  uint8_t repeats;
 } song_info;
 
 
