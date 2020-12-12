@@ -180,20 +180,6 @@ struct song_definition {
   const struct TTINSTRUMENT** instruments;
 };
 
-struct {
-  uint16_t samples_per_tick;
-  uint16_t tick;
-  uint16_t next_tick;
-  uint16_t tick_smp_count;
-  struct song_definition* song_def;
-  uint8_t cur_pattern;
-  uint8_t order_idx;
-  uint16_t pat_idx;
-  bool playing;
-  uint8_t repeats;
-} song_info;
-
-
 #ifdef __cplusplus
 }
 #endif
